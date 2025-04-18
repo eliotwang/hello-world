@@ -54,8 +54,8 @@
 
 `基于 Broadcast/CommonEvent 的 Android 和 HarmonyOS Next 应用通信实现`
 
-以下是一套基于 Broadcast（Android）和 CommonEvent（HarmonyOS Next）的完整实现方案，用于实现自研 App 与系统应用或其他普通应用的双向通信，支持发送和接收 JSON 数据（json in 和 json out），并满足流式传输 json out 中的 text_field 以及统计 TTFT（Time to First Token） 的需求。
-实现包括 自研 App 侧 和 对端 App 侧（模拟系统应用或普通应用）的代码，涵盖 Android 和 HarmonyOS Next 的适配。
+以下是一套基于 Broadcast（Android）和 CommonEvent（HarmonyOS Next）的完整实现方案，用于实现自研 App 与智能助手或智能app的双向通信，支持发送和接收 JSON 数据（json in 和 json out），并满足流式传输 json out 中的 text_field 以及统计 TTFT（Time to First Token） 的需求。
+实现包括 自研 App 侧 和 智能助手或智能app 侧的代码，涵盖 Android 和 HarmonyOS Next 的适配。
 
 需求回顾
 
@@ -671,58 +671,4 @@ HarmonyOS Next: 使用 CommonEvent 和 Want，适配分布式事件分发。
 确保存储权限（Android 和 HarmonyOS Next）以访问文件路径。
 
 HarmonyOS Next 需声明 ohos.permission.READ_MEDIA 和 WRITE_MEDIA。
-
-广播可靠性:
-Android 的广播可能因进程被杀死而丢失，建议对端 App 运行在前台或使用粘性广播。
-
-HarmonyOS Next 的 CommonEvent 支持分布式分发，但需验证目标应用的接收能力。
-
-数据量限制:
-Broadcast/CommonEvent 的数据量有限，text_field 分块大小建议控制在 1KB 以内。
-
-若 text_field 过大，可结合 Content Provider（Android）或 FileShare（HarmonyOS Next）传输。
-
-系统应用支持:
-验证目标系统应用（如智能助手）是否支持自定义广播。
-
-若不支持，可通过 Intent/Want 触发系统动作（如 ACTION_SEND）。
-
-调试:
-使用 Android Studio 的 Logcat 查看广播日志。
-
-使用 DevEco Studio 的日志工具监控 CommonEvent。
-
-
-5. 扩展建议
-
-错误处理:
-检查 JSON 格式有效性，处理解析异常。
-
-实现重试机制，应对广播丢失。
-
-性能优化:
-减少广播频率，合并小块 text_field（如每 500ms 发送一次）。
-
-使用异步处理（Android 的 Handler 或 HarmonyOS Next 的 setTimeout）。
-
-迁移工具:
-使用 DevEco Studio 的迁移向导，将 Android 的 Broadcast 转换为 CommonEvent。
-
-测试:
-测试主流 Android 设备（小米、华为）和 HarmonyOS Next 设备。
-
-验证 TTFT 统计的准确性（通过日志对比时间戳）。
-
-总结
-
-上述实现基于 Broadcast/CommonEvent，提供了自研 App 和对端 App 的完整代码，满足：
-双向通信：发送 json in，接收 json out。
-
-流式传输：text_field 通过分块广播实现流式返回。
-
-TTFT 统计：精确记录首字符到达时间。
-
-跨平台兼容：支持 Android 和 HarmonyOS Next，代码复用率约 80%。
-
-该方案开发简单，适合快速实现与系统应用和普通应用的通信。若目标应用不支持广播，可考虑结合 Intent/Want 或 WebSocket 作为备选方案。
 
