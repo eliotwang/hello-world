@@ -1,4 +1,58 @@
-基于 Broadcast/CommonEvent 的 Android 和 HarmonyOS Next 应用通信实现
+测试app与智能助手或智能app交互方式及接口提案
+
+`总体需求`
+
+1. 测试app发送文本（图像可选）给智能助手或智能app，触发智能助手或智能app的数据处理流程；
+2. 智能助手或智能app把处理结果文本（图像可选）发送给测试app；
+3. 智能助手或智能app需要流式传输文本处理结果；
+4. 测试app会自行计算ttft（首字延迟）及tps（每秒生成token数）指标；
+5. 发送及返回内容拟包含如下json字段；
+
+发送给智能助手或智能app的json:
+```json
+{
+  "test_id": "TEST_001",
+  "text_field": "这是一个测试文本字段",
+  "image_local_path": "/path/to/images/test_image.jpg",
+  "audio_local_path": "/path/to/audio/test_audio.mp3",
+  "validity": {
+    "text_valid": false,
+    "image_valid": false,
+    "audio_valid": false
+  }
+}
+```
+从智能助手或智能app处收到的json::
+```json
+{
+  "test_id": "TEST_001",
+  "status": "success or fail",
+  "text_field": "这是一个测试文本字段",
+  "image_local_path": "/path/to/images/test_image.jpg",
+  "audio_local_path": "/path/to/audio/test_audio.mp3",
+  "validity": {
+    "text_valid": false,
+    "image_valid": false,
+    "audio_valid": false
+  }
+}
+```
+
+`实现方案提议`
+
+考虑到适配代码的侵入性，适配工作量，接口定义灵活性，跨平台等因素，提议如下两种实现方式：
+1. 基于 Broadcast/CommonEvent 的 Android 和 HarmonyOS Next 通信实现；
+2. 基于AIDL/ArkTS IPC的Android和HarmonyOS Next 的通信实现；
+
+其中，
+方案1对厂商现有代码的侵入性较小，适配工作量较低，可以支持灵活的接口定义，跨平台（Android和HarmonyOS Next）有类似实现机制；
+方案2需要对现有代码进行调整，我方需发布sdk，厂商需实现对应的service，有一定程度的代码侵入性，适配工作量适中，可以支持灵活的接口定义，跨平台（Android和HarmonyOS Next）有类似实现机制；
+
+此外，考虑到测试app会自行计算ttft（首字延迟）及tps（每秒生成token数）指标，因此通信延迟是比较重要的因素，对于方案1，建议厂商把广播分为两个包，即首字包和其余字段包（厂商自行整理打包），减少通信次数，降低通信延迟。
+
+下面对两种方案的相关实现细节做进一步展开描述，供厂商参考：
+
+`基于 Broadcast/CommonEvent 的 Android 和 HarmonyOS Next 应用通信实现`
 
 以下是一套基于 Broadcast（Android）和 CommonEvent（HarmonyOS Next）的完整实现方案，用于实现自研 App 与系统应用或其他普通应用的双向通信，支持发送和接收 JSON 数据（json in 和 json out），并满足流式传输 json out 中的 text_field 以及统计 TTFT（Time to First Token） 的需求。
 实现包括 自研 App 侧 和 对端 App 侧（模拟系统应用或普通应用）的代码，涵盖 Android 和 HarmonyOS Next 的适配。
